@@ -1,9 +1,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
+
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
 
 class HelloTriangleApplication {
 public:
@@ -14,17 +17,16 @@ public:
         cleanup();
     }
 
-    const uint32_t WIDTH = 800;
-    const uint32_t HEIGHT = 600;
-
 private:
+    GLFWwindow* window;
+
     void initWindow() {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        window_ = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     }
 
     void initVulkan() {
@@ -32,18 +34,16 @@ private:
     }
 
     void mainLoop() {
-        while (!glfwWindowShouldClose(window_)) {
+        while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
         }
     }
 
     void cleanup() {
-        glfwDestroyWindow(window_);
+        glfwDestroyWindow(window);
+
         glfwTerminate();
     }
-
-private:
-    GLFWwindow* window_ = nullptr;
 };
 
 int main() {
