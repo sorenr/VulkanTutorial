@@ -11,6 +11,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 
+# Force 64-bit compilation (required for Vulkan SDK's default lib path)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
+
 # Find Vulkan (from Vulkan SDK)
 find_package(Vulkan QUIET)
 if(NOT Vulkan_FOUND)
