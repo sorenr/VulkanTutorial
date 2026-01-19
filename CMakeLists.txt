@@ -12,7 +12,14 @@ set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 
 # Find Vulkan (from Vulkan SDK)
-find_package(Vulkan REQUIRED)
+find_package(Vulkan QUIET)
+if(NOT Vulkan_FOUND)
+    message(FATAL_ERROR
+        "Could not find Vulkan SDK. Download and install from:\n"
+        "  https://vulkan.lunarg.com/sdk/home\n"
+        "After installation, you may need to restart your terminal or IDE."
+    )
+endif()
 
 # Add GLFW submodule
 # Assumes: external/glfw contains the GLFW repo
