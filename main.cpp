@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <map>
 
 class HelloTriangleApplication {
 public:
@@ -42,6 +43,7 @@ private:
     void initVulkan() {
         createInstance();
         setupDebugMessenger();
+        pickPhysicalDevice();
     }
 
     void mainLoop() {
@@ -190,9 +192,78 @@ private:
     }
 
 private:
+    // physical devices and queue families
+
+    int rateDeviceSuitability(const VkPhysicalDevice& device) {
+        VkPhysicalDeviceProperties deviceProperties;
+        VkPhysicalDeviceFeatures deviceFeatures;
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+        std::cout << "Device " << deviceProperties.deviceID << " " << deviceProperties.deviceName;
+
+        if (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            std::cout << " not a discrete GPU" << std::endl;
+        }
+
+        if (!deviceFeatures.geometryShader) {
+            std::cout << " no geometry shader" << std::endl;
+            return 0;
+        }
+
+        int score = 0;
+
+        // Discrete GPUs have a significant performance advantage
+        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            score += 1000;
+        }
+
+        // Maximum possible size of textures affects graphics quality
+        score += deviceProperties.limits.maxImageDimension2D;
+
+        std::cout << " score: " << score << std::endl;
+
+        return score;
+    }
+
+    void pickPhysicalDevice() {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
+
+        if (deviceCount == 0) {
+            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        }
+
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
+
+        // Use an ordered map to automatically sort candidates by increasing score
+        std::multimap<int, VkPhysicalDevice> candidates;
+
+        for (const VkPhysicalDevice& device : devices) {
+            int score = rateDeviceSuitability(device);
+            if (score > 0) {
+                candidates.insert(std::make_pair(score, device));
+            }
+        }
+
+        if (candidates.empty()) {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+
+        // Check if the best candidate is suitable at all
+        if (candidates.rbegin()->first > 0) {
+            physicalDevice_ = candidates.rbegin()->second;
+        } else {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+    }
+
+private:
     GLFWwindow* window_ = nullptr;
     VkInstance instance_ = nullptr;
     VkDebugUtilsMessengerEXT debugMessenger_;
+    VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
 };
 
 int main() {
